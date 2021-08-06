@@ -1,0 +1,49 @@
+Shell script is a great way to automate repetitive task in our Linux/Unix Environment.
+
+What is Shell Script?
+Shell script is a sequence of system commands pasted in a text file. 
+
+Example: send some XYZ Report to compliance team @ Every Friday
+Report: it should contain versions info of Docker, Nginx and OS Uname
+
+Command to find the version of Docker : Docker -v
+command to find the version of Nginx: nginx -v
+command to get OS uname: uname
+
+keeping thses three commands in script
+#! /bin/bash
+docker -v
+nginx -v
+uname
+mail  
+to run this script on every friday, schedule this script in crontab and mail them. 
+
+to send the only version info use the filters like "cut" command 
+docker -v
+docker version 19.03.12, build 48a66213fe
+docker -v | cut -d " " -f 3 | tr "," " " (i used transfer to remove ",")
+nginx -v 
+nginx version: nginx/1.14.0 (ubuntu)
+nginx -v 2>&1 | cut -d " " -f 3 | cut -d "/" -f 2
+
+Now let us keep these steps in script to do the script complete automate
+#!/bin/bash 
+dockerversion=`dcoker -v | cut -d " " -f 3 | tr "," " "`
+nginxversion=`nginx -v 2>&1 | cut -d " " -f 3 | cut -d "/" -f 2`
+osuname=$(uname)
+
+cat <<EOF | /usr/bin/mail -s "$(date): Compliance Report $(hostname)" "complianceteam@gmail.com"
+docker Version: $dockerversion 
+Nginx Version: $nginxversion
+os Uname: $osuname
+
+Thanks & Regards,
+Devops Team
+EOF
+
+Before scheduling the job for every friday, provide execute permissions to script
+chmod +x test.sh
+
+for testing purpose, schedule cron job to send report for every one minute
+crontab -e
+* * * * * /home/ec2-user/test.sh
